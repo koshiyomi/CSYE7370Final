@@ -42,6 +42,9 @@ class StockTrade(gym.Env):
         self.stock_hold = np.zeros(stock_quantity)
         self.current_asset = ASSET
 
+        # game status variable
+        self.done = False
+
     def step(self, action):
         state = self.np_data[self.current_day]
 
@@ -67,14 +70,30 @@ class StockTrade(gym.Env):
                 reward += stock_price
                 self.current_asset += stock_price
 
-        # increment of day
-        self.current_day += 1
+        # calculate interest
+        reward -= BANK_INTEREST
+        self.current_asset -= BANK_INTEREST
+
+        # check if done
+        if self.current_day - self.starting_day > 1000 or self.current_asset < 0:
+            self.done = True
+
+        if self.done:
+            return state, 0, self.done, {}
+        else:
+            self.current_day += 1
+            return
+
+
 
     def reset(self):
         # reset stock data
         if self.change_stocks:
             self.pd_data = self.sdp.get_data()
             self.np_data = (self.pd_data.drop('Date', axis=1)).to_numpy()
+
+        self.done = False
+
         # day variables
         self.starting_day = random.randrange(len(self.pd_data) - MAXIMUM_STEPS)
         self.current_day = self.starting_day
