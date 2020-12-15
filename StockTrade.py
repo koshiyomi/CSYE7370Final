@@ -7,12 +7,12 @@ from gym import spaces
 from StockDataPreprocessor import StockDataPreprocessor
 
 OBSERVATION_NUMBER = 5
-# MAXIMUM_STEPS = 1000
+MAXIMUM_STEPS = 1000
 ASSET = 1000000
 # BANK_INTEREST = ASSET * 0.05 / 365
 BANK_INTEREST = 10
 TRANSACTION_FEE = 10
-DAILY_TRANSACTION_LIMIT = 100
+DAILY_TRANSACTION_LIMIT = 5000
 
 
 class StockTrade(gym.Env):
@@ -36,10 +36,10 @@ class StockTrade(gym.Env):
         self.change_stocks = change_stocks
 
         # day variables
-        # self.starting_day = random.randrange(len(self.pd_data) - MAXIMUM_STEPS)
-        # self.current_day = self.starting_day
+        self.starting_day = random.randrange(len(self.pd_data) - MAXIMUM_STEPS)
+        self.current_day = self.starting_day
         # todo
-        self.current_day = 0
+        # self.current_day = 0
 
         # stock variables
         self.stock_hold = np.zeros(stock_quantity)
@@ -72,7 +72,7 @@ class StockTrade(gym.Env):
                     # if action request more than stock held to sell
                     if - stock_share_amount > self.stock_hold[i]:
                         stock_share_amount = self.stock_hold[i]
-                    stock_price =  - high_price * stock_share_amount - TRANSACTION_FEE
+                    stock_price = - high_price * stock_share_amount - TRANSACTION_FEE
                     reward += stock_price
                     self.current_asset += stock_price
 
@@ -81,8 +81,8 @@ class StockTrade(gym.Env):
             self.current_asset -= BANK_INTEREST
 
             # check if done
-            # if self.current_day - self.starting_day >= 1000 or self.current_asset < 0:
-            if self.current_day >= len(self.pd_data) - 2 or self.current_asset < 0:
+            if self.current_day - self.starting_day >= 998 or self.current_asset < 0:
+            # if self.current_day >= len(self.pd_data) - 2 or self.current_asset < 0:
                 self.done = True
 
             self.current_day += 1
@@ -100,8 +100,8 @@ class StockTrade(gym.Env):
         self.done = False
 
         # day variables
-        # self.starting_day = random.randrange(len(self.pd_data) - MAXIMUM_STEPS)
-        self.current_day = 0
+        self.starting_day = random.randrange(len(self.pd_data) - MAXIMUM_STEPS)
+        self.current_day = self.starting_day
 
         # stock variables
         self.stock_hold = np.zeros(self.stock_quantity)
