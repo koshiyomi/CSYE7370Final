@@ -11,6 +11,7 @@ MAXIMUM_STEPS = 1000
 ASSET = 1000000
 BANK_INTEREST = ASSET * 0.05 / 365
 TRANSACTION_FEE = 50
+DAILY_TRANSACTION_LIMIT = 5000
 
 
 class StockTrade(gym.Env):
@@ -44,8 +45,27 @@ class StockTrade(gym.Env):
     def step(self, action):
         state = self.np_data[self.current_day]
 
+        reward = 0
+        for i in range(self.stock_quantity):
+            stock_share_amount = action[i] * DAILY_TRANSACTION_LIMIT
+            high_price = state[5 * i + 1]
+            low_price = state[5 * i + 2]
 
+            # buy stock
+            if stock_share_amount > 0:
+                self.stock_hold[i] += stock_share_amount
+                stock_price = -low_price * stock_share_amount - TRANSACTION_FEE
+                reward += stock_price
+                self.current_asset += stock_price
 
+            # sell stock
+            if stock_share_amount < 0:
+                # if action request more than stock held to sell
+                if stock_share_amount > self.stock_hold[i]:
+                    stock_share_amount = self.stock_hold[i]
+                stock_price = high_price * stock_share_amount - TRANSACTION_FEE
+                reward += stock_price
+                self.current_asset += stock_price
 
         # increment of day
         self.current_day += 1
