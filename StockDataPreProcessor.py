@@ -18,8 +18,13 @@ class StockDataPreProcessor:
         for filename in filenames:
             stock_data.append(pd.read_csv(self.path+'/'+filename))
 
-        return filenames
+        min_date = min(stock_data[0]['Date'])
+        max_date = max(stock_data[0]['Date'])
+        for sd in stock_data:
+            if min(sd['Date']) < min_date:
+                min_date = min(sd['Date'])
+            if max(sd['Date']) < max_date:
+                max_date = max(sd['Date'])
 
 
-processor = StockDataPreProcessor()
-print(len(processor.get_data()))
+        return stock_data
