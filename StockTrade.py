@@ -20,7 +20,7 @@ class StockTrade(gym.Env):
     def __init__(self, path='archive/Data/Stocks', stock_quantity=5, change_stocks=True):
         # define action and observation space
         self.action_space = spaces.Box(low=-1, high=1, shape=(stock_quantity,))
-        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(stock_quantity * OBSERVATION_NUMBER,))
+        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(stock_quantity * OBSERVATION_NUMBER + stock_quantity,))
 
         # generate stock data using
         self.sdp = StockDataPreprocessor(path, stock_quantity)
@@ -86,10 +86,10 @@ class StockTrade(gym.Env):
                 self.done = True
 
             self.current_day += 1
-            return self.np_data[self.current_day], reward, self.done, {}
+            return np.concatenate((self.np_data[self.current_day], self.stock_hold)), reward, self.done, {}
 
         else:
-            return self.np_data[self.current_day], 0, self.done, {}
+            return np.concatenate((self.np_data[self.current_day], self.stock_hold)), 0, self.done, {}
 
     def reset(self):
         # reset stock data
@@ -107,7 +107,7 @@ class StockTrade(gym.Env):
         self.stock_hold = np.zeros(self.stock_quantity)
         self.current_asset = ASSET
 
-        return self.np_data[self.current_day]
+        return np.concatenate((self.np_data[self.current_day], self.stock_hold))
 
     def render(self, mode='human'):
         pass
