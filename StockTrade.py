@@ -35,8 +35,10 @@ class StockTrade(gym.Env):
         self.change_stocks = change_stocks
 
         # day variables
-        self.starting_day = random.randrange(len(self.pd_data) - MAXIMUM_STEPS)
-        self.current_day = self.starting_day
+        # self.starting_day = random.randrange(len(self.pd_data) - MAXIMUM_STEPS)
+        # self.current_day = self.starting_day
+        # todo
+        self.current_day = 0
 
         # stock variables
         self.stock_hold = np.zeros(stock_quantity)
@@ -52,7 +54,6 @@ class StockTrade(gym.Env):
             reward = 0
 
             # calculate reward of stock transaction
-            # TODO: figure out using Box object
             for i in range(self.stock_quantity):
                 stock_share_amount = action[i] * DAILY_TRANSACTION_LIMIT
                 high_price = state[5 * i + 1]
@@ -79,7 +80,8 @@ class StockTrade(gym.Env):
             self.current_asset -= BANK_INTEREST
 
             # check if done
-            if self.current_day - self.starting_day >= 1000 or self.current_asset < 0:
+            # if self.current_day - self.starting_day >= 1000 or self.current_asset < 0:
+            if self.current_day >= len(self.pd_data) - 1 or self.current_asset < 0:
                 self.done = True
 
             self.current_day += 1
@@ -97,12 +99,14 @@ class StockTrade(gym.Env):
         self.done = False
 
         # day variables
-        self.starting_day = random.randrange(len(self.pd_data) - MAXIMUM_STEPS)
-        self.current_day = self.starting_day
+        # self.starting_day = random.randrange(len(self.pd_data) - MAXIMUM_STEPS)
+        self.current_day = 0
 
         # stock variables
         self.stock_hold = np.zeros(self.stock_quantity)
         self.current_asset = ASSET
+
+        return self.np_data[self.current_day]
 
     def render(self, mode='human'):
         pass
