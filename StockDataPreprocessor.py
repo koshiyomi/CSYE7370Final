@@ -5,7 +5,7 @@ from random import sample
 import pandas as pd
 
 
-class StockDataPreProcessor:
+class StockDataPreprocessor:
     def __init__(self, path='archive/Data/Stocks', stock_quantity=5):
         self.path = path
         self.stock_quantity = stock_quantity
