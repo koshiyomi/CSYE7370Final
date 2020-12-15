@@ -46,45 +46,46 @@ class StockTrade(gym.Env):
         self.done = False
 
     def step(self, action):
-        state = self.np_data[self.current_day]
+        if not self.done:
+            state = self.np_data[self.current_day]
 
-        reward = 0
-        for i in range(self.stock_quantity):
-            stock_share_amount = action[i] * DAILY_TRANSACTION_LIMIT
-            high_price = state[5 * i + 1]
-            low_price = state[5 * i + 2]
+            reward = 0
 
-            # buy stock
-            if stock_share_amount > 0:
-                self.stock_hold[i] += stock_share_amount
-                stock_price = -low_price * stock_share_amount - TRANSACTION_FEE
-                reward += stock_price
-                self.current_asset += stock_price
+            # calculate reward of stock transaction
+            for i in range(self.stock_quantity):
+                stock_share_amount = action[i] * DAILY_TRANSACTION_LIMIT
+                high_price = state[5 * i + 1]
+                low_price = state[5 * i + 2]
 
-            # sell stock
-            if stock_share_amount < 0:
-                # if action request more than stock held to sell
-                if stock_share_amount > self.stock_hold[i]:
-                    stock_share_amount = self.stock_hold[i]
-                stock_price = high_price * stock_share_amount - TRANSACTION_FEE
-                reward += stock_price
-                self.current_asset += stock_price
+                # buy stock
+                if stock_share_amount > 0:
+                    self.stock_hold[i] += stock_share_amount
+                    stock_price = -low_price * stock_share_amount - TRANSACTION_FEE
+                    reward += stock_price
+                    self.current_asset += stock_price
 
-        # calculate interest
-        reward -= BANK_INTEREST
-        self.current_asset -= BANK_INTEREST
+                # sell stock
+                if stock_share_amount < 0:
+                    # if action request more than stock held to sell
+                    if stock_share_amount > self.stock_hold[i]:
+                        stock_share_amount = self.stock_hold[i]
+                    stock_price = high_price * stock_share_amount - TRANSACTION_FEE
+                    reward += stock_price
+                    self.current_asset += stock_price
 
-        # check if done
-        if self.current_day - self.starting_day > 1000 or self.current_asset < 0:
-            self.done = True
+            # calculate interest
+            reward -= BANK_INTEREST
+            self.current_asset -= BANK_INTEREST
 
-        if self.done:
-            return state, 0, self.done, {}
-        else:
+            # check if done
+            if self.current_day - self.starting_day >= 1000 or self.current_asset < 0:
+                self.done = True
+
             self.current_day += 1
-            return
+            return self.np_data[self.current_day], reward, self.done, {}
 
-
+        else:
+            return self.np_data[self.current_day], 0, self.done, {}
 
     def reset(self):
         # reset stock data
