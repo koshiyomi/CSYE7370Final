@@ -7,10 +7,11 @@ from gym import spaces
 from StockDataPreprocessor import StockDataPreprocessor
 
 OBSERVATION_NUMBER = 5
-MAXIMUM_STEPS = 1000
+# MAXIMUM_STEPS = 1000
 ASSET = 1000000
-BANK_INTEREST = ASSET * 0.05 / 365
-TRANSACTION_FEE = 50
+# BANK_INTEREST = ASSET * 0.05 / 365
+BANK_INTEREST = 10
+TRANSACTION_FEE = 10
 DAILY_TRANSACTION_LIMIT = 100
 
 
@@ -62,16 +63,16 @@ class StockTrade(gym.Env):
                 # buy stock
                 if stock_share_amount > 0:
                     self.stock_hold[i] += stock_share_amount
-                    stock_price = -low_price * stock_share_amount - TRANSACTION_FEE
+                    stock_price = - low_price * stock_share_amount - TRANSACTION_FEE
                     reward += stock_price
                     self.current_asset += stock_price
 
                 # sell stock
                 if stock_share_amount < 0:
                     # if action request more than stock held to sell
-                    if stock_share_amount > self.stock_hold[i]:
+                    if - stock_share_amount > self.stock_hold[i]:
                         stock_share_amount = self.stock_hold[i]
-                    stock_price = high_price * stock_share_amount - TRANSACTION_FEE
+                    stock_price =  - high_price * stock_share_amount - TRANSACTION_FEE
                     reward += stock_price
                     self.current_asset += stock_price
 
@@ -81,7 +82,7 @@ class StockTrade(gym.Env):
 
             # check if done
             # if self.current_day - self.starting_day >= 1000 or self.current_asset < 0:
-            if self.current_day >= len(self.pd_data) - 1 or self.current_asset < 0:
+            if self.current_day >= len(self.pd_data) - 2 or self.current_asset < 0:
                 self.done = True
 
             self.current_day += 1
