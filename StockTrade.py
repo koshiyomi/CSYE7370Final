@@ -52,6 +52,7 @@ class StockTrade(gym.Env):
             reward = 0
 
             # calculate reward of stock transaction
+            # TODO: figure out using Box object
             for i in range(self.stock_quantity):
                 stock_share_amount = action[i] * DAILY_TRANSACTION_LIMIT
                 high_price = state[5 * i + 1]
