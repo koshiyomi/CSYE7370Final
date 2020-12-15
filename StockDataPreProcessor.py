@@ -16,15 +16,13 @@ class StockDataPreProcessor:
 
         stock_data = []
         for filename in filenames:
-            stock_data.append(pd.read_csv(self.path+'/'+filename))
+            stock_data.append(pd.read_csv(self.path + '/' + filename))
 
-        min_date = min(stock_data[0]['Date'])
-        max_date = max(stock_data[0]['Date'])
-        for sd in stock_data:
-            if min(sd['Date']) < min_date:
-                min_date = min(sd['Date'])
-            if max(sd['Date']) < max_date:
-                max_date = max(sd['Date'])
+        for i in range(len(stock_data)):
+            stock_data[i].drop('OpenInt', axis=1, inplace=True)
 
+        joined_data = stock_data[0]
+        for i in range(1, len(stock_data)):
+            joined_data = pd.merge(joined_data, stock_data[i], how='inner', on='Date')
 
-        return stock_data
+        return joined_data
