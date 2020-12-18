@@ -68,8 +68,8 @@ class StockTrade(gym.Env):
             # calculate reward of stock transaction
             for i in range(self.stock_quantity):
                 stock_share_amount = action[i] * DAILY_TRANSACTION_LIMIT
-                high_price = current_price[5 * i + 1]
-                low_price = current_price[5 * i + 2]
+                high_price = current_price[N_STOCK_INFO * i + 1]
+                low_price = current_price[N_STOCK_INFO * i + 2]
 
                 # buy stock
                 if stock_share_amount > 0:
@@ -123,7 +123,15 @@ class StockTrade(gym.Env):
         return np.concatenate((self.np_data[self.current_day], self.stock_hold, self.stock_history), axis=None)
 
     def render(self, mode='human'):
-        pass
+        print('#################################')
+        print('day', self.current_day - self.starting_day + 1)
+        for i in range(self.stock_quantity):
+            print('stock ', i)
+            print('current high:', self.np_data[self.current_day][5 * i + 1])
+            print('current low:', self.np_data[self.current_day][5 * i + 2])
+            print('hold:', self.stock_hold[i])
+        print('asset in hand:', self.current_asset)
+
 
 
 class StockTradeDiscrete(gym.Env):
