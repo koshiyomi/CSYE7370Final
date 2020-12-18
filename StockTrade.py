@@ -11,7 +11,7 @@ N_HISTORY = 100
 
 ASSET = 1000000
 
-BANK_INTEREST = 10
+BANK_INTEREST = 100
 TRANSACTION_FEE = 10
 DAILY_TRANSACTION_LIMIT = 5000
 MAXIMUM_STEPS = 1000
@@ -28,6 +28,7 @@ class StockTrade(gym.Env):
                                  stock_quantity + \
                                  N_HISTORY * stock_quantity * N_STOCK_INFO
         self.observation_space = spaces.Box(low=0, high=np.inf, shape=(observation_space_size,))
+        self.reward_range = (-float('inf'), float('inf'))
 
         # generate stock data using
         self.sdp = StockDataPreprocessor(path, stock_quantity)
@@ -84,7 +85,7 @@ class StockTrade(gym.Env):
                     if - stock_share_amount > self.stock_hold[i]:
                         stock_share_amount = self.stock_hold[i]
                     stock_price = - high_price * stock_share_amount - TRANSACTION_FEE
-                    reward += stock_price
+                    reward += stock_price * 1.5
                     self.current_asset += stock_price
 
             # calculate interest
@@ -97,7 +98,7 @@ class StockTrade(gym.Env):
 
             self.current_day += 1
             return np.concatenate(
-                (current_price, self.stock_hold, current_history)), reward, self.done, {}
+                (current_price, self.stock_hold, current_history)), reward / 100000, self.done, {}
 
         else:
             return np.concatenate(
