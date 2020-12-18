@@ -13,6 +13,7 @@ ASSET = 1000000
 BANK_INTEREST = 10
 TRANSACTION_FEE = 10
 DAILY_TRANSACTION_LIMIT = 5000
+N_HISTORY = 100
 
 
 class StockTrade(gym.Env):
@@ -20,7 +21,7 @@ class StockTrade(gym.Env):
     def __init__(self, path='archive/Data/Stocks', stock_quantity=5, change_stocks=True):
         # define action and observation space
         self.action_space = spaces.Box(low=-1, high=1, shape=(stock_quantity,))
-        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(stock_quantity * OBSERVATION_NUMBER + stock_quantity,))
+        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(stock_quantity * OBSERVATION_NUMBER + stock_quantity + N_HISTORY * stock_quantity * OBSERVATION_NUMBER,))
 
         # generate stock data using
         self.sdp = StockDataPreprocessor(path, stock_quantity)
@@ -31,15 +32,14 @@ class StockTrade(gym.Env):
         # numpy for presenting states
         self.np_data = (self.pd_data.drop('Date', axis=1)).to_numpy()
 
-        # in game variables
+        # environment variables
         self.stock_quantity = stock_quantity
         self.change_stocks = change_stocks
 
-        # day variables
+        # in game variables
         self.starting_day = random.randrange(len(self.pd_data) - MAXIMUM_STEPS)
         self.current_day = self.starting_day
-        # todo
-        # self.current_day = 0
+        self.stock_history = np.zeros(N_HISTORY * stock_quantity * OBSERVATION_NUMBER)
 
         # stock variables
         self.stock_hold = np.zeros(stock_quantity)
@@ -50,15 +50,20 @@ class StockTrade(gym.Env):
 
     def step(self, action):
         if not self.done:
-            state = self.np_data[self.current_day]
+            current_price = self.np_data[self.current_day]
+            current_history = self.stock_history
+            self.stock_history = np.roll(self.stock_history, self.stock_quantity * OBSERVATION_NUMBER)
+
+            for i in range(len(current_price)):
+                self.stock_history[i] = current_price[i]
 
             reward = 0
 
             # calculate reward of stock transaction
             for i in range(self.stock_quantity):
                 stock_share_amount = action[i] * DAILY_TRANSACTION_LIMIT
-                high_price = state[5 * i + 1]
-                low_price = state[5 * i + 2]
+                high_price = current_price[5 * i + 1]
+                low_price = current_price[5 * i + 2]
 
                 # buy stock
                 if stock_share_amount > 0:
@@ -82,14 +87,13 @@ class StockTrade(gym.Env):
 
             # check if done
             if self.current_day - self.starting_day >= 998 or self.current_asset < 0:
-            # if self.current_day >= len(self.pd_data) - 2 or self.current_asset < 0:
                 self.done = True
 
             self.current_day += 1
-            return np.concatenate((self.np_data[self.current_day], self.stock_hold)), reward, self.done, {}
+            return np.concatenate((self.np_data[self.current_day], self.stock_hold, current_history)), reward, self.done, {}
 
         else:
-            return np.concatenate((self.np_data[self.current_day], self.stock_hold)), 0, self.done, {}
+            return np.concatenate((self.np_data[self.current_day], self.stock_hold, self.stock_history)), 0, self.done, {}
 
     def reset(self):
         # reset stock data
@@ -102,12 +106,13 @@ class StockTrade(gym.Env):
         # day variables
         self.starting_day = random.randrange(len(self.pd_data) - MAXIMUM_STEPS)
         self.current_day = self.starting_day
+        self.stock_history = np.zeros(N_HISTORY * self.stock_quantity * OBSERVATION_NUMBER)
 
         # stock variables
         self.stock_hold = np.zeros(self.stock_quantity)
         self.current_asset = ASSET
 
-        return np.concatenate((self.np_data[self.current_day], self.stock_hold))
+        return np.concatenate((self.np_data[self.current_day], self.stock_hold, self.stock_history), axis=None)
 
     def render(self, mode='human'):
         pass
