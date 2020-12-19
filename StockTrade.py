@@ -19,8 +19,18 @@ MAXIMUM_STEPS = 1000
 
 
 class StockTrade(gym.Env):
+    """
+    Stock trade environment with continuous action space and modifiable stock quantity
+    """
 
     def __init__(self, path='archive/Data/Stocks', stock_quantity=5, change_stocks=True):
+        """
+        initializer of StockTrade
+        :param path: path where the stock data stored
+        :param stock_quantity: 
+        :param change_stocks:
+        """
+
         # define action and observation space
         self.action_space = spaces.Box(low=-1, high=1, shape=(stock_quantity,))
 
