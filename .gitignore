@@ -2,3 +2,4 @@ archive
 .ipynb_checkpoints
 .idea
 tmp
+__pycache__
