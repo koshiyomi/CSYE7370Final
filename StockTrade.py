@@ -162,16 +162,17 @@ class StockTradeDiscrete(gym.Env):
                 if self.held_stock_number == 0:
                     reward -= 1
                 else:
-                    reward = (self.held_stock_number - self.current_stock_price - self.held_stock_price)
+                    reward = (self.held_stock_number * self.current_stock_price - self.held_stock_price)
                     self.profit += reward
                     self.held_stock_price = 0
                     self.held_stock_number = 0
 
-            if len(self.np_data) - self.day <= 1:
+            if len(self.np_data) - self.day <= 2:
                 self.done = True
 
             self.day += 1
             self.current_stock_price = self.np_data[self.day]
+            current_history = self.stock_history
             self.stock_history = np.roll(self.stock_history, 1)
             self.stock_history[0] = self.current_stock_price
 
@@ -180,7 +181,7 @@ class StockTradeDiscrete(gym.Env):
             if reward < 0:
                 reward = -1
 
-            return np.concatenate(([self.current_stock_price], self.stock_history)), reward, self.done, {}
+            return np.concatenate(([self.current_stock_price], current_history)), reward, self.done, {}
         else:
             return np.concatenate(([self.current_stock_price], self.stock_history)), 0, self.done, {}
 
@@ -192,7 +193,10 @@ class StockTradeDiscrete(gym.Env):
         self.held_stock_price = 0
         self.held_stock_number = 0
         self.stock_history = np.zeros(N_HISTORY)
-        return np.concatenate(([self.current_stock_price], self.stock_history))
+        current_history = self.stock_history
+        self.stock_history = np.roll(self.stock_history, 1)
+        self.stock_history[0] = self.current_stock_price
+        return np.concatenate(([self.current_stock_price], current_history))
 
     def render(self, mode='human'):
         pass
