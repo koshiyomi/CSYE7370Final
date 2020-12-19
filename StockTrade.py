@@ -1,7 +1,8 @@
 import random
-import pandas as pd
+
 import gym
 import numpy as np
+import pandas as pd
 from gym import spaces
 
 from StockDataPreprocessor import StockDataPreprocessor
@@ -167,7 +168,7 @@ class StockTradeDiscrete(gym.Env):
                     self.held_stock_price = 0
                     self.held_stock_number = 0
 
-            if len(self.np_data) - self.day <= 2:
+            if self.day >= 999:
                 self.done = True
 
             self.day += 1
@@ -176,7 +177,7 @@ class StockTradeDiscrete(gym.Env):
             self.stock_history = np.roll(self.stock_history, 1)
             self.stock_history[0] = self.current_stock_price
 
-            if reward >0:
+            if reward > 0:
                 reward = 1
             if reward < 0:
                 reward = -1
