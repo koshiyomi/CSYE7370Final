@@ -1,5 +1,5 @@
 import random
-
+import pandas as pd
 import gym
 import numpy as np
 from gym import spaces
@@ -134,17 +134,65 @@ class StockTrade(gym.Env):
         print('asset in hand:', self.current_asset)
 
 
-
 class StockTradeDiscrete(gym.Env):
 
     def __init__(self):
-        pass
+        self.action_space = spaces.Discrete(3)
+        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(1 + N_HISTORY,))
+        self.pd_data = pd.read_csv('archive/Data/Stocks/aan.us.txt')
+        self.np_data = self.pd_data['Low'].to_numpy()
+
+        self.day = 0
+        self.done = False
+        self.profit = 0
+        self.current_stock_price = self.np_data[self.day]
+        self.held_stock_price = 0
+        self.held_stock_number = 0
+        self.stock_history = np.zeros(N_HISTORY)
 
     def step(self, action):
-        pass
+        if not self.done:
+            reward = 0
+
+            if action == 0:
+                self.held_stock_price += self.current_stock_price
+                self.held_stock_number += 1
+
+            if action == 1:
+                if self.held_stock_number == 0:
+                    reward -= 1
+                else:
+                    reward = (self.held_stock_number - self.current_stock_price - self.held_stock_price)
+                    self.profit += reward
+                    self.held_stock_price = 0
+                    self.held_stock_number = 0
+
+            if len(self.np_data) - self.day <= 1:
+                self.done = True
+
+            self.day += 1
+            self.current_stock_price = self.np_data[self.day]
+            self.stock_history = np.roll(self.stock_history, 1)
+            self.stock_history[0] = self.current_stock_price
+
+            if reward >0:
+                reward = 1
+            if reward < 0:
+                reward = -1
+
+            return np.concatenate(([self.current_stock_price], self.stock_history)), reward, self.done, {}
+        else:
+            return np.concatenate(([self.current_stock_price], self.stock_history)), 0, self.done, {}
 
     def reset(self):
-        pass
+        self.day = 0
+        self.done = False
+        self.profit = 0
+        self.current_stock_price = self.np_data[self.day]
+        self.held_stock_price = 0
+        self.held_stock_number = 0
+        self.stock_history = np.zeros(N_HISTORY)
+        return np.concatenate(([self.current_stock_price], self.stock_history))
 
     def render(self, mode='human'):
         pass
