@@ -200,4 +200,8 @@ class StockTradeDiscrete(gym.Env):
         return np.concatenate(([self.current_stock_price], current_history))
 
     def render(self, mode='human'):
-        pass
+        print('#################################')
+        print('day', self.day + 1)
+        print('current price:', self.current_stock_price)
+        print('hold:', self.held_stock_number)
+        print('profit got:', self.profit)
